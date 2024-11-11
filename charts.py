@@ -1,63 +1,81 @@
-# charts.py
-import plotly.express as px
-import plotly.graph_objects as go
-import pandas as pd
 import streamlit as st
+import plotly.express as px
+import pandas as pd
 
 def time_series_line_chart(df):
-    fig = px.line(df, x='Date', y='Amount (EUR)', color='Expense/Income',
-                  title="Time Series of Income and Expenses")
-    st.plotly_chart(fig)
+    """
+    Displays a time series line chart of income and expenses over time.
+    """
+    fig = px.line(df, x="Date", y="Amount (EUR)", color="Expense/Income", 
+                  title="Income and Expenses Over Time")
+    st.plotly_chart(fig, use_container_width=True)
 
 def stacked_area_chart(df):
-    fig = px.area(df, x="Date", y="Amount (EUR)", color="Expense/Income",
+    """
+    Displays a stacked area chart to show cumulative income and expenses over time.
+    """
+    fig = px.area(df, x="Date", y="Amount (EUR)", color="Expense/Income", 
                   title="Cumulative Income and Expenses Over Time")
-    st.plotly_chart(fig)
+    st.plotly_chart(fig, use_container_width=True)
 
 def category_bar_chart(df):
-    fig = px.bar(df, x="Category", y="Amount (EUR)", color="Expense/Income",
-                 title="Spending and Income by Category", barmode="group")
-    st.plotly_chart(fig)
+    """
+    Displays a bar chart comparing spending across categories.
+    """
+    fig = px.bar(df, x="Category", y="Amount (EUR)", color="Expense/Income", 
+                 title="Spending and Income by Category")
+    st.plotly_chart(fig, use_container_width=True)
 
-def pie_chart(df, expense_income_type):
-    filtered_df = df[df['Expense/Income'] == expense_income_type]
-    fig = px.pie(filtered_df, values="Amount (EUR)", names="Category", 
-                 title=f"{expense_income_type} Distribution by Category")
-    st.plotly_chart(fig)
+def pie_chart(df, type="Expense"):
+    """
+    Displays a pie chart showing the proportion of each category for expenses or income.
+    
+    Parameters:
+    - type (str): "Expense" or "Income" to filter by type.
+    """
+    filtered_df = df[df["Expense/Income"] == type]
+    fig = px.pie(filtered_df, names="Category", values="Amount (EUR)", 
+                 title=f"{type} Distribution by Category")
+    st.plotly_chart(fig, use_container_width=True)
 
 def bubble_chart(df):
-    fig = px.scatter(df, x="Date", y="Amount (EUR)", size="Amount (EUR)", color="Category",
-                     title="Transaction Bubble Chart by Date and Category", hover_name="Category")
-    st.plotly_chart(fig)
+    """
+    Displays a bubble chart of transactions, with size representing transaction amount.
+    """
+    fig = px.scatter(df, x="Date", y="Amount (EUR)", size="Amount (EUR)", color="Category", 
+                     title="Bubble Chart of Transactions Over Time")
+    st.plotly_chart(fig, use_container_width=True)
 
 def monthly_breakdown_chart(df):
-    df['Month'] = df['Date'].dt.to_period("M")
-    monthly_data = df.groupby(['Month', 'Expense/Income'])['Amount (EUR)'].sum().unstack().fillna(0)
-    monthly_data = monthly_data.reset_index()
-    monthly_data['Month'] = monthly_data['Month'].dt.to_timestamp()
-
-    fig = px.bar(monthly_data, x="Month", y=["Expense", "Income"], title="Monthly Income and Expenses",
-                 barmode="group")
-    st.plotly_chart(fig)
+    """
+    Displays a grouped bar chart showing income and expenses by month.
+    """
+    # Extract month and year for grouping
+    df["Month"] = pd.to_datetime(df["Date"]).dt.to_period("M")
+    monthly_df = df.groupby(["Month", "Expense/Income"])["Amount (EUR)"].sum().reset_index()
+    
+    fig = px.bar(monthly_df, x="Month", y="Amount (EUR)", color="Expense/Income", barmode="group", 
+                 title="Monthly Income and Expenses Breakdown")
+    st.plotly_chart(fig, use_container_width=True)
 
 def cumulative_sum_line_chart(df):
-    df = df.sort_values("Date")
-    df['Cumulative Amount'] = df.groupby("Expense/Income")['Amount (EUR)'].cumsum()
-
-    fig = px.line(df, x="Date", y="Cumulative Amount", color="Expense/Income",
-                  title="Cumulative Income and Expenses Over Time")
-    st.plotly_chart(fig)
+    """
+    Displays a cumulative sum line chart of spending and income over time.
+    """
+    df = df.sort_values("Date")  # Ensure data is sorted by date
+    df["Cumulative Sum"] = df["Amount (EUR)"].cumsum()
+    fig = px.line(df, x="Date", y="Cumulative Sum", title="Cumulative Balance Over Time")
+    st.plotly_chart(fig, use_container_width=True)
 
 def heatmap_transaction_frequency(df):
-    df['Day of Week'] = df['Date'].dt.day_name()
-    df['Hour of Day'] = df['Date'].dt.hour
-    heatmap_data = df.groupby(['Day of Week', 'Hour of Day']).size().unstack(fill_value=0)
-
-    fig = go.Figure(data=go.Heatmap(
-        z=heatmap_data.values,
-        x=heatmap_data.columns,
-        y=heatmap_data.index,
-        colorscale='Viridis'
-    ))
-    fig.update_layout(title="Transaction Frequency Heatmap", xaxis_title="Hour of Day", yaxis_title="Day of Week")
-    st.plotly_chart(fig)
+    """
+    Displays a heatmap for transaction frequency by day of the week and time of day.
+    """
+    # Example of creating a heatmap by assuming 'Day' and 'Time' columns exist in df
+    df['Day'] = pd.to_datetime(df["Date"]).dt.day_name()
+    df['Time'] = pd.to_datetime(df["Date"]).dt.hour
+    frequency_df = df.groupby(['Day', 'Time']).size().reset_index(name="Frequency")
+    
+    fig = px.density_heatmap(frequency_df, x="Time", y="Day", z="Frequency", 
+                             title="Transaction Frequency by Day and Time", nbinsx=24)
+    st.plotly_chart(fig, use_container_width=True)

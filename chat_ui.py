@@ -1,23 +1,48 @@
-# chat_ui.py
 import streamlit as st
-from langchain_community.llms import Ollama
+from llm_chat import generate_chat_response
 
-# Initialize the local Ollama LLM
-llm = Ollama(model="llama2")  # Specify your model name if different
+def render_chat_ui(df):
+    """
+    Renders the chat interface for interacting with the financial assistant LLM.
+    
+    Parameters:
+    - df (DataFrame): The user's categorized transaction data.
+    """
+    st.sidebar.title("Chat with Financial Assistant")
 
-def chat_ui(df):
-    st.sidebar.header("Chatbot")
-    st.sidebar.write("Ask questions about your transactions, spending patterns, or financial goals.")
+    # Initialize session state for chat history if it doesn’t exist
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
 
-    # User input for question
-    user_question = st.sidebar.text_input("Type your question here:")
-    if user_question:
-        # Prepare the data context and prompt for the LLM
-        data_context = df.to_dict(orient="records")  # Convert data to dictionary format
-        prompt = f"{user_question} based on my transaction data: {data_context}"
-        
-        # Query the LLM
-        llm_response = llm.invoke(prompt)
-        
-        # Display response
-        st.sidebar.write("LLM Response:", llm_response)
+    # Display chat history in a scrollable container
+    with st.sidebar.container():
+        st.write("Chat History:")
+        chat_messages = st.sidebar.empty()  # Placeholder for chat messages
+
+        # Display all messages in session history in a scrollable area
+        chat_history_html = ""
+        for question, response in st.session_state.chat_history:
+            chat_history_html += f"<p><b>You:</b> {question}</p><p><b>Assistant:</b> {response}</p><hr>"
+
+        # Render the chat history HTML with scrollable styling
+        chat_messages.markdown(
+            f"<div style='max-height: 300px; overflow-y: auto; padding: 10px;'>{chat_history_html}</div>",
+            unsafe_allow_html=True
+        )
+
+    # Input for user's question at the bottom of the chat sidebar
+    user_question = st.sidebar.text_input("Ask a question about your finances:", key="user_question_input")
+
+    # Trigger response on question submission
+    if st.sidebar.button("Ask"):
+        if user_question.strip():
+            # Generate response and add it to chat history
+            response = generate_chat_response(user_question, df)
+            st.session_state.chat_history.append((user_question, response))
+
+            # Use a placeholder to clear the input after submission
+            st.sidebar.text_input("Ask a question about your finances:", key="user_question_input_clear", value="")
+
+    # Clear chat history button
+    if st.sidebar.button("Clear Chat History"):
+        st.session_state.chat_history = []
