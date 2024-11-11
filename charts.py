@@ -2,6 +2,11 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 
+import plotly.express as px
+import plotly.graph_objects as go
+import pandas as pd
+
+
 def time_series_line_chart(df):
     """
     Displays a time series line chart of income and expenses over time.
@@ -79,3 +84,42 @@ def heatmap_transaction_frequency(df):
     fig = px.density_heatmap(frequency_df, x="Time", y="Day", z="Frequency", 
                              title="Transaction Frequency by Day and Time", nbinsx=24)
     st.plotly_chart(fig, use_container_width=True)
+
+
+
+
+
+## only when prompted 
+
+
+
+
+
+def plot_top_categories(result, title="Top Categories by Spending/Income"):
+    """Display a bar chart for the top categories by spending or income using Plotly."""
+    fig = px.bar(result, x=result.index, y=result.values, title=title, labels={"x": "Category", "y": "Amount (EUR)"})
+    fig.update_layout(xaxis_tickangle=-45)
+    return fig
+
+def plot_monthly_growth(result, title="Monthly Growth Rate"):
+    """Display a line chart for monthly growth rates using Plotly."""
+    fig = px.line(result, x=result.index, y=result.values, title=title, labels={"x": "Month", "y": "Growth Rate (%)"})
+    fig.update_traces(mode="markers+lines")  # Adds markers to the line chart
+    return fig
+
+def plot_yearly_summary(result):
+    """Display a grouped bar chart for yearly summary of income, expenses, and net savings using Plotly."""
+    fig = go.Figure()
+    for col in result.columns:
+        fig.add_trace(go.Bar(
+            x=result.index,
+            y=result[col],
+            name=col
+        ))
+    fig.update_layout(
+        title="Yearly Summary of Income, Expenses, and Net Savings",
+        barmode='group',
+        xaxis_title="Year",
+        yaxis_title="Amount (EUR)"
+    )
+    return fig

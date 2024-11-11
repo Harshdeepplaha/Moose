@@ -1,17 +1,19 @@
-import streamlit as st
-import layout  # Imports the layout structure with sidebar and main content
+# app.py
 
-# Main function to render the app layout
+import streamlit as st
+import layout
+
 def main():
-    # Set up Streamlit app configuration
-    st.set_page_config(
-        page_title="Financial Dashboard",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
-    
-    # Render the entire app layout
+    # Initialize session state if not already done
+    if 'goal_created' not in st.session_state:
+        st.session_state['goal_created'] = False
+
     layout.render_layout()
+
+    # Reset the flag after rerun
+    if st.session_state['goal_created']:
+        st.session_state['goal_created'] = False
 
 if __name__ == "__main__":
     main()
+
