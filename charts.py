@@ -7,12 +7,38 @@ import plotly.graph_objects as go
 import pandas as pd
 
 
+
 def time_series_line_chart(df):
     """
-    Displays a time series line chart of income and expenses over time.
+    Displays a time series line chart showing cumulative income, expenses, and net savings over time.
     """
-    fig = px.line(df, x="Date", y="Amount (EUR)", color="Expense/Income", 
-                  title="Income and Expenses Over Time")
+    # Ensure Date column is in datetime format
+    df["Date"] = pd.to_datetime(df["Date"], errors='coerce')
+    df = df.dropna(subset=["Date"])
+
+    # Sort by date to ensure correct cumulative calculations
+    df = df.sort_values("Date")
+
+    # Separate income and expenses for cumulative calculations
+    df["Cumulative Income"] = df[df["Expense/Income"] == "Income"]["Amount (EUR)"].cumsum().fillna(method="ffill")
+    df["Cumulative Expense"] = df[df["Expense/Income"] == "Expense"]["Amount (EUR)"].cumsum().fillna(method="ffill")
+
+    # Calculate net savings as the difference between cumulative income and expenses
+    df["Net Savings"] = df["Cumulative Income"] - df["Cumulative Expense"]
+
+    # Melt data for Plotly compatibility, using a unique `value_name`
+    df_melted = pd.melt(
+        df, 
+        id_vars=["Date"], 
+        value_vars=["Cumulative Income", "Cumulative Expense", "Net Savings"],
+        var_name="Metric", 
+        value_name="Value"  # Changed to "Value" to avoid conflicts
+    )
+
+    # Create the line chart
+    fig = px.line(df_melted, x="Date", y="Value", color="Metric", 
+                  title="Cumulative Income, Expenses, and Net Savings Over Time")
+
     st.plotly_chart(fig, use_container_width=True)
 
 def stacked_area_chart(df):

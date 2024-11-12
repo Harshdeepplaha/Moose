@@ -5,6 +5,8 @@ import layout
 
 def main():
     # Initialize session state if not already done
+
+    
     if 'goal_created' not in st.session_state:
         st.session_state['goal_created'] = False
 

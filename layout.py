@@ -7,8 +7,8 @@ import categorization
 import chat_ui
 import chart_ui
 import expense_entry_form  # Import the form module
+import llm_chat  # Import the llm_chat module
 from utils import format_currency
-from llm_chat import generate_chat_response
 import pandas as pd
 from create_goal_ui import display_goal_creation_ui
 
@@ -48,7 +48,8 @@ def process_and_store_data(uploaded_file, user_categories):
 
 def render_main_content(uploaded_file, user_categories):
     """Main content area with tabs for Financial Goals, Categorized Transactions, and Financial Dashboard."""
-    st.title("Moose")
+    st.markdown("<h1 style='text-align: center; '>MOOSE</h1>", unsafe_allow_html=True)
+
 
     # Only process the data once when the file is uploaded
     if uploaded_file or "categorized_data" in st.session_state:
@@ -59,9 +60,9 @@ def render_main_content(uploaded_file, user_categories):
         categorized_df = st.session_state["categorized_data"]  # Access the stored data
 
         # Create tabs for different sections
-        tabs = st.tabs([ "Categorized Transactions",  "Financial Goals",  "Dashboard", 'Chat with Moose'])
+        tabs = st.tabs(["Categorized Transactions", "Financial Goals", "Dashboard", "Chat with Moose"])
 
-        # Financial Goals Tab
+        # Categorized Transactions Tab
         with tabs[0]:
             st.subheader("Categorized Transactions")
             # Date range picker
@@ -83,17 +84,10 @@ def render_main_content(uploaded_file, user_categories):
 
             st.write(filtered_df)  # Display the filtered categorized transactions
 
-
-
-
-
-            
-        # Categorized Transactions Tab
+        # Financial Goals Tab
         with tabs[1]:
             st.subheader("Financial Goals")
             display_goal_creation_ui()  # Display goal creation and tracking UI
-
-            
 
         # Financial Dashboard Tab
         with tabs[2]:
@@ -110,13 +104,11 @@ def render_main_content(uploaded_file, user_categories):
             st.header("Charts")
             chart_ui.render_chart_grid(filtered_df)
 
-            
-
+        # Chat with Moose Tab
         with tabs[3]:
-            # Chat UI Section
             st.header("Chat with Moose")
-            chat_ui.render_chat_ui(filtered_df)
-
+            # Use llm_chat's render_chat_ui function to handle the chat and mic functionalities
+            llm_chat.render_chat_ui(filtered_df)
 
     else:
         # Show splash screen if no file is uploaded
